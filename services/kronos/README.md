@@ -14,6 +14,7 @@ scales to zero on its own.
 ```
 GET /health
 GET /forecast?ticker=AAPL&horizon=10&lookback=400&samples=3
+GET /forecast?ticker=AAPL&horizon=10&as_of=2026-06-01   # replay + realized outcome
 ```
 
 ```json
@@ -74,6 +75,29 @@ Cost: `--min-instances 0` means idle spend is zero; a forecast costs a few
 seconds of 2 vCPU / 4 GiB, i.e. fractions of a cent. First request after idle
 pays a cold start (image pull + torch import + weights download on a fresh
 instance), roughly 40-60 s.
+
+## Measured performance (do not skip)
+
+Zero-shot `Kronos-small`, 400 daily bars, 20 US mega caps, 7 replay dates
+(2025-08 → 2026-08), `backtest.py`. Both horizons show **no directional edge**:
+
+| horizon | samples | hit rate (95% CI) | always-up baseline | MAE Kronos | MAE flat |
+| --- | --- | --- | --- | --- | --- |
+| 5 days | 139 | 49.6% (41.5–57.8) | 64.0% | 6.49% | 3.66% |
+| 10 days | 112 | 50.9% (41.8–60.0) | 58.0% | 8.30% | 5.17% |
+
+Prediction correlation with realized moves: 0.04 (5d) and 0.26 (10d). The model
+also carries a bearish tilt on this sample — 59–68% of forecasts were negative
+while the average realized move was +1.4% to +2.0% — so feeding it to an analyst
+would inject a directional bias that the data does not support.
+
+Caveats: small sample, zero-shot only, daily bars, US large caps. The paper's
+gains are cross-sectional RankIC on its own pretraining distribution, which is a
+different task from "will this ticker be up in 10 days". Fine-tuning on US data
+is the untested path.
+
+**Consequence:** keep this as an opt-in experiment. Do not present its output as
+evidence, and do not let it override indicators or the verified snapshot.
 
 ## Env vars
 
