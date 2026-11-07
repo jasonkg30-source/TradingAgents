@@ -20,6 +20,7 @@ from tradingagents.agents.utils.agent_utils import (
     get_income_statement,
     get_indicators,
     get_insider_transactions,
+    get_kronos_forecast,
     get_macro_indicators,
     get_news,
     get_prediction_markets,
@@ -198,6 +199,9 @@ class TradingAgentsGraph:
                     # LLM and required by its prompt; must be executable here or
                     # the call fails and the model reports it "unavailable").
                     get_verified_market_snapshot,
+                    # Kronos price-path forecast (no-op sentinel when the sidecar
+                    # is not configured, so the call never hard-fails).
+                    get_kronos_forecast,
                 ]
             ),
             "social": ToolNode(
